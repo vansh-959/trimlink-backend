@@ -13,7 +13,7 @@ const {v4:uuidv4}=require("uuid")
 const {setUser,getUser}=require("./services/auth.js")
 
 app.use(cors({
-    origin: true,
+    origin:['https://trimlink-frontend.vercel.app'],
     credentials: true,
 }));
 app.use(express.json());
