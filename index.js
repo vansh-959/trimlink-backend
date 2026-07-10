@@ -2,7 +2,7 @@ const express = require("express")
 const cors = require("cors")
 const path = require("path")
 const qr=require("qrcode")
-require("dotenv").config();
+//require("dotenv").config();
 const app = express();
 const port = 8003;
 
