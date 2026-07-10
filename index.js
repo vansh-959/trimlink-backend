@@ -12,30 +12,8 @@ const {v4:uuidv4}=require("uuid")
 
 const {setUser,getUser}=require("./services/auth.js")
 
-const allowedOrigins = [
-    'https://trimlink-frontend.vercel.app',
-    'http://localhost:8003',
-    'http://127.0.0.1:8003'
-];
-
 app.use(cors({
-    origin: function (origin, callback) {
-        if (!origin) return callback(null, true);
-        
-        // Remove trailing slash if present
-        const cleanOrigin = origin.replace(/\/$/, "");
-        
-        const isAllowed = allowedOrigins.includes(cleanOrigin) || 
-                          cleanOrigin.endsWith('.vercel.app') || 
-                          cleanOrigin.startsWith('http://localhost:') || 
-                          cleanOrigin.startsWith('http://127.0.0.1:');
-                          
-        if (isAllowed) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: true,
     credentials: true,
 }));
 app.use(express.json());
@@ -195,8 +173,7 @@ app.post("/api/auth/login", async (req, res) => {
         setUser(sessionId,user);
         res.cookie("uid", sessionId, {
             httpOnly: true,
-            sameSite: "none",
-            secure: true,
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return res.status(200).json({
@@ -233,19 +210,18 @@ app.post("/api/",restrictToLoggedInUserOnly, async (req, res) => {
         }
        
         const shortId = nanoid(5);
-        const backendUrl = process.env.BACKEND_URL || 'https://trimlink-backend.vercel.app';
-        const shortUrl = `${backendUrl}/api/${shortId}`;
-        const qrCode = await qr.toDataURL(shortUrl)
+        const shortUrl= `http://localhost:8003/api/${shortId}`
+        const qrCode=await qr.toDataURL(shortUrl)
         const url = await Url.create({
             longUrl: longUrl,
             shortId: shortId,
-            qrCode: qrCode,
-            createdBy: req.user._id,
+            qrCode:qrCode,
+            createdBy:req.user._id,
         });
         return res.status(201).json({
             message: "shortUrl generated ",
             shortId: `${shortId}`,
-            shortUrl: `${backendUrl}/api/${shortId}`,
+            shortUrl: `http://localhost:8003/api/${shortId}`,
             qrCode: qrCode
         })
     } catch (error) {
@@ -273,20 +249,19 @@ app.post("/api/custom/",restrictToLoggedInUserOnly,async(req,res)=>{
                 message:"Custom ID already exists"
             })
         }
-        const backendUrl2 = process.env.BACKEND_URL || 'https://trimlink-backend.vercel.app';
-        const shortUrl = `${backendUrl2}/api/${customId}`;
-        const qrCode = await qr.toDataURL(shortUrl);
+        const shortUrl = `http://localhost:8003/api/${customId}`;
+        const qrCode=await qr.toDataURL(shortUrl);
 
-        const custom = await Url.create({
-            longUrl: longUrl,
-            shortId: customId,
-            qrCode: qrCode,
-            createdBy: req.user._id,
+        const custom=await Url.create({
+            longUrl:longUrl,
+            shortId:customId,
+            qrCode:qrCode,
+            createdBy:req.user._id,
         })
         return res.status(201).json({
-            message: "Custom Id Created Sucsessfully ",
+            message:"Custom Id Created Sucsessfully ",
             shortId: `${customId}`,
-            shortUrl: `${backendUrl2}/api/${customId}`,
+            shortUrl: `http://localhost:8003/api/${customId}`,
             qrCode: qrCode
         })
     }catch(error){
@@ -437,12 +412,8 @@ app.delete("/api/shortUrl/Delete/:shortId", async (req, res) => {
 
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-if (process.env.NODE_ENV !== "production") {
-    app.listen(port, () => {
-        console.log("server is running on port", port)
-        console.log("open http://localhost:8003/login.html")
-    })
-}
-
-module.exports = app;
+app.listen(port, () => {
+    console.log("server is running on port", port)
+    console.log("open http://localhost:8003/login.html")
+})
 
