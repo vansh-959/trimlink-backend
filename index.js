@@ -415,8 +415,12 @@ app.delete("/api/shortUrl/Delete/:shortId", async (req, res) => {
 
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-app.listen(port, () => {
-    console.log("server is running on port", port)
-    console.log("open http://localhost:8003/login.html")
-})
+if (process.env.NODE_ENV !== "production") {
+    app.listen(port, () => {
+        console.log("server is running on port", port)
+        console.log("open http://localhost:8003/login.html")
+    })
+}
+
+module.exports = app;
 
