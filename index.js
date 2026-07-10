@@ -13,14 +13,14 @@ const {v4:uuidv4}=require("uuid")
 const {setUser,getUser}=require("./services/auth.js")
 
 app.use(cors({
-    origin: true,
+    origin: process.env.FRONTEND_URL || 'https://trimlink-frontend.vercel.app',
     credentials: true,
 }));
 app.use(express.json());
 app.use(cookieParser());
 
 const mongoose = require("mongoose")
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI || process.env.MONGODB_URI)
     .then(() => {
         console.log("mongodb altas connected")
     })
@@ -173,7 +173,8 @@ app.post("/api/auth/login", async (req, res) => {
         setUser(sessionId,user);
         res.cookie("uid", sessionId, {
             httpOnly: true,
-            sameSite: "lax",
+            sameSite: "none",
+            secure: true,
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
         return res.status(200).json({
@@ -210,19 +211,19 @@ app.post("/api/",restrictToLoggedInUserOnly, async (req, res) => {
         }
        
         const shortId = nanoid(5);
-        const shortUrl= `http://localhost:8003/api/${shortId}`
-         const qrCode=await qr.toDataURL(shortUrl)
+        const backendUrl = process.env.BACKEND_URL || 'https://trimlink-backend.vercel.app';
+        const shortUrl = `${backendUrl}/api/${shortId}`;
+        const qrCode = await qr.toDataURL(shortUrl)
         const url = await Url.create({
             longUrl: longUrl,
             shortId: shortId,
-            qrCode:qrCode,
-            createdBy:req.user._id,
+            qrCode: qrCode,
+            createdBy: req.user._id,
         });
         return res.status(201).json({
-
             message: "shortUrl generated ",
             shortId: `${shortId}`,
-            shortUrl: `http://localhost:8003/api/${shortId}`,
+            shortUrl: `${backendUrl}/api/${shortId}`,
             qrCode: qrCode
         })
     } catch (error) {
@@ -250,21 +251,21 @@ app.post("/api/custom/",restrictToLoggedInUserOnly,async(req,res)=>{
                 message:"Custom ID already exists"
             })
         }
-        const shortUrl = `http://localhost:8003/api/${customId}`;
-        const qrCode=await qr.toDataURL(shortUrl);
+        const backendUrl2 = process.env.BACKEND_URL || 'https://trimlink-backend.vercel.app';
+        const shortUrl = `${backendUrl2}/api/${customId}`;
+        const qrCode = await qr.toDataURL(shortUrl);
 
-        const custom=await Url.create({
-            longUrl:longUrl,
-            shortId:customId,
-            qrCode:qrCode,
-            createdBy:req.user._id,
+        const custom = await Url.create({
+            longUrl: longUrl,
+            shortId: customId,
+            qrCode: qrCode,
+            createdBy: req.user._id,
         })
         return res.status(201).json({
-            message:"Custom Id Created Sucsessfully ",
+            message: "Custom Id Created Sucsessfully ",
             shortId: `${customId}`,
-            shortUrl: `http://localhost:8003/api/${customId}`,
+            shortUrl: `${backendUrl2}/api/${customId}`,
             qrCode: qrCode
-
         })
     }catch(error){
         return res.status(500).json({
