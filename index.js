@@ -12,8 +12,30 @@ const {v4:uuidv4}=require("uuid")
 
 const {setUser,getUser}=require("./services/auth.js")
 
+const allowedOrigins = [
+    'https://trimlink-frontend.vercel.app',
+    'http://localhost:8003',
+    'http://127.0.0.1:8003'
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'https://trimlink-frontend.vercel.app',
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        
+        // Remove trailing slash if present
+        const cleanOrigin = origin.replace(/\/$/, "");
+        
+        const isAllowed = allowedOrigins.includes(cleanOrigin) || 
+                          cleanOrigin.endsWith('.vercel.app') || 
+                          cleanOrigin.startsWith('http://localhost:') || 
+                          cleanOrigin.startsWith('http://127.0.0.1:');
+                          
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 app.use(express.json());
